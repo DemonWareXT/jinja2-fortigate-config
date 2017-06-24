@@ -1,4 +1,6 @@
 {# handle different feature syntaxes - currently statically defining commands in list #}
-{% for feature in config|sort %}
-  {{- feature }}
-{% endfor %}
+config system settings
+{% for feature in config|sort -%}
+  set {{ feature }}
+{% endfor -%}
+end

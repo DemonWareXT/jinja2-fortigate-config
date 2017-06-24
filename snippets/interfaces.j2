@@ -1,0 +1,20 @@
+{# Interface DB -#}
+config system interface
+{% for port, config in config|dictsort -%}
+edit {{ port }}
+    set vdom "root"
+    set ip {{ config['ip'] }}
+    set scan-botnet-connections block
+    set description "{{ config['description'] }}"
+    set alias "{{ config['alias'] }}"
+    {% if config['role'] == "lan" -%}
+    set allowaccess ping https ssh snmp
+    set device-identification enable
+    set device-identification-active-scan disable
+    {% else -%}
+    set allowaccess ping
+    {% endif -%}
+    set role {{ config['role'] }}
+    next
+{% endfor -%}
+end

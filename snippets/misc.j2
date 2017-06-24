@@ -1,18 +1,45 @@
-hostname {{ config['hostname'] }}
+{# Configure Global setting -#}
+config system global
+    set admin-sport 10000
+    set admintimeout 20
+    set gui-theme blue
+    set hostname "{{ config['hostname'] }}"
+    set timezone 26
+end
 
-{# snmp-server user admin network-admin auth md5 -- priv -- localizedkey #}
-snmp-server host {{ config['snmp']['traphost'] }} traps version 2c public udp-port 2162
-{# snmp-server community -- group network-operator #}
-{# snmp-server community -- use-acl acl_for_ro_comm #}
+{# Configure default GW -#}
+config router static
+    edit 0
+    set gateway {{ config['gateway']}}
+    set device {{ config['wan']}}
+next
+end
 
-{% for ntpserver in config['ntp'] -%}
-    ntp server {{ ntpserver }} use-vrf management
-{% endfor %}
-{# TODO: Need to find a way to insert "prefer" keyword #}
-ntp source-interface mgmt0
+{# Configure Default admin -#}
+config system admin
+    edit "admin"
+        {% for trusthost in config['custadmin']['trusthost'] -%}
+            set trusthost{{loop.index}} {{ trusthost }}
+        {% endfor -%}
+        set password {{ config['defaultadmin']['password']}}
+    next
+end
 
-vrf context management
-  ip route 0.0.0.0/0 {{ config['mgmtgw']}}
+{# Configure aditional admin -#}
+config system admin
+    edit "{{ config['custadmin']['username'] }}"
+        {% for trusthost in config['custadmin']['trusthost'] -%}
+            set trusthost{{loop.index}} {{ trusthost }}
+        {% endfor -%}
+        set accprofile "super_admin"
+        set vdom "root"
+        set password {{ config['custadmin']['password'] }}
+    next
+end
 
-spanning-tree domain 101
-spanning-tree vlan 1-4093 priority 4096
+{# Configure system DNS -#}
+config system dns
+    set primary {{config['dns']['primary']}}
+    set secondary {{config['dns']['secondary']}}
+    set domain "{{config['dns']['domain']}}"
+end

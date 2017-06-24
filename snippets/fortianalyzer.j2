@@ -1,0 +1,7 @@
+{# Configure fortianalyzer setting -#}
+config log fortianalyzer setting
+    set status enable
+    set server {{ config }}
+    set upload-option realtime
+    set reliable enable
+end

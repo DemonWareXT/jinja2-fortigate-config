@@ -5,7 +5,8 @@
     and generates a Jinja2 configuration
 """
 
-import sys, methods
+import sys
+import methods
 
 def run():
     """Function docstring"""
@@ -14,12 +15,10 @@ def run():
     except IndexError:
         print "Please refer to documentation for proper arguments"
     configdict = methods.get_config(yamlfile)
-    
+
     #Generate configurations for the core snippets
     for snippet in configdict['coresnippets']:
         print methods.gen_snippet(snippet, configdict[snippet])
-
-    #TODO: consider doing some kind of check for core stuff before features
 
 if __name__ == "__main__":
     run()

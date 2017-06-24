@@ -1,0 +1,135 @@
+# Fortigate Jinja2 Template Configuration File
+#
+
+# CORESNIPPETS
+#
+# This selects whichs snippets will be used
+# If something is not needed just delete it 
+coresnippets:
+    - interfaces
+    - features
+    - misc
+    - snmp
+    - ntp
+    - fortianalyzer
+    - ipsec
+
+#Variables
+#Adjust variables as needed
+#Don't edit the variable names, or stuff will break
+hostname: &hostname fwl-001
+wan: &wan wan1
+
+# Interfaces
+#
+# Define Interface 
+# Usable Options
+# ip: 192.168.1.1/24
+# description: 20170620 - OfficeLAN
+# alias: Office LAN
+# role: lan
+
+interfaces:
+    port1:
+        ip: 192.168.1.1/24
+        description: 20170620 - OfficeLAN
+        alias: Office LAN
+        role: lan
+    port2: 
+        ip: 192.168.2.1/24
+        description: 20170620 - DMZ
+        alias: DMZ
+        role: dmz
+    wan1: 
+        ip: 10.5.6.4/30
+        description: 20170620 - WAN
+        alias: Internet
+        role: wan
+#Select GUI-Features to Enable
+features:
+    - gui-implicit-policy enable
+    - gui-dns-database enable
+    - gui-dos-policy enable
+    - gui-ap-profile enable
+    - gui-dynamic-routing enable
+    - gui-threat-weight enable
+    - gui-multiple-utm-profiles enable
+    - gui-application-control enable
+    - gui-casi enable
+    - gui-endpoint-control enable
+    - gui-dhcp-advanced enable
+    - gui-vpn enable
+    - gui-wireless-controller enable
+    - gui-switch-controller enable
+    - gui-traffic-shaping enable
+    - gui-wan-load-balancing enable
+    - gui-antivirus enable
+    - gui-webfilter enable
+    - gui-dnsfilter enable
+    - compliance-check enable
+
+#Automatic IPSec Config
+#Tunnel Settings are automatically given!!
+#if you need more flexibility use ipsec-custom (to be implemented)
+#Carefull, policy generation is not finished, always check policies
+ipsec:
+    UMB_SDMZ:
+        peer: 192.178.23.45
+        psk: thisissosecurekeyhaha
+        #Don't edit variable here, they're up up up!^
+        port: *wan
+        internal: internal
+        local:
+            - 10.129.229.0/24
+            - 10.129.129.0/24
+        remote:
+            - 192.168.100.224/27
+            - 192.168.100.224/27
+    PartnerVPN:
+        peer: 10.1.2.9
+        psk: evenmoresecure!!!
+        #Don't edit variable here, they're up up up!^
+        port: *wan
+        internal: internal
+        local:
+            - 10.10.229.0/24
+            - 10.10.129.0/24
+        remote:
+            - 192.168.2.0/24
+            - 192.168.2.0/24
+
+#Misc configurations
+#
+misc:
+    #Don't edit variable here, they're up up up!^
+    hostname: *hostname
+    gateway: 10.5.6.5
+    #Don't edit variable here, they're up up up!^
+    wan: *wan
+    defaultadmin:
+        password: l1rO8DVLj0VVaDPBXyDZQVZAv
+    custadmin:
+        username: bestadmin
+        password: wesogood
+        trusthost:
+            - 192.168.1.0/24
+    dns:
+        primary: 8.8.8.8
+        secondary: 8.8.4.4
+        domain: contoso.local
+
+snmp:
+    #Don't edit variable here, they're up up up!^
+    hostname: *hostname
+    location: DC03 Rack 09 U20 
+    community:
+        umbmonitoring:
+            host:
+             - 10.128.16.29/32
+             - 10.128.16.30/32
+ntp: 
+    - 192.168.11.10
+    - ntp1.fortinet.net
+#Set fortianalyzer
+#if it does not exist, just delete the Snippet up at the top of this config
+fortianalyzer: 10.128.16.30

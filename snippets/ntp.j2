@@ -1,0 +1,13 @@
+{# Configure Global NTP Settings -#}
+config system ntp
+    set ntpsync enable
+    set type custom
+    set syncinterval 60
+    config ntpserver
+        {% for ntpserver in config -%}
+        edit 0
+            set server "{{ ntpserver }}"
+        next
+        {% endfor -%}
+    end
+end

@@ -1,0 +1,20 @@
+config system snmp sysinfo
+    set status enable
+    set description "{{ config['hostname'] }}"
+    set contact-info "netsupport@umb.ch"
+    set location "{{ config['location'] }}"
+end
+
+config system snmp community
+    {% for community, config in config['community']|dictsort -%}
+        edit 0
+            set name "{{community}}"
+            config hosts
+                {% for host in config['host'] -%}
+                edit 0
+                    set ip {{host}}
+                next
+                {% endfor -%}
+            end
+    {% endfor -%}
+end

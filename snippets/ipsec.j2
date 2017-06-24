@@ -1,0 +1,93 @@
+{# Configure all phase1 interfaces -#}
+config vpn ipsec phase1-interface
+{% for vpn, ipsec in config|dictsort -%}
+    edit P1_{{ vpn }}
+        set interface "{{ ipsec['port'] }}"
+        set peertype any
+        set proposal aes256-sha1
+        set dpd disable
+        set dhgrp 2
+        set nattraversal disable
+        set remote-gw {{ ipsec['peer'] }}
+        set psksecret {{ ipsec['psk'] }}
+    next
+{% endfor -%}
+end
+
+{# Configure all phase2 interfaces -#}
+config vpn ipsec phase2-interface
+{% for vpn, config in config|dictsort -%}
+    {% for local in config['local']|sort -%}
+        {# Loop count used to iterate VPNs-#}
+        edit P2_{{ vpn }}_{{loop.index}}
+            set phase1name P1_{{ vpn }}
+            set proposal aes256-sha1
+            set dhgrp 2
+            set keylifeseconds 3600
+            set src-subnet {{ local }}
+            set dst-subnet {{ config['remote'][loop.index -1] }}
+        next
+    {% endfor -%}
+{% endfor -%}
+end
+
+{# Configure all routing instances -#}
+config router static
+    {% for vpn, ipsec in config|dictsort %}
+            edit 0
+                set dst {{ipsec['remote'][loop.index -1]}}
+                set device  P1_{{vpn}}
+            next
+            edit 0
+                set blackhole enable
+                set distance 50
+                set dst {{ipsec['remote'][loop.index -1]}}
+            next
+    {% endfor %}
+end
+
+{# Configure all firewall adresses -#}
+config firewall address
+    {% for vpn, ipsec in config|dictsort %}
+            edit "net_{{ipsec['remote'][loop.index -1]}}"
+            set comment "P1_{{vpn}}"
+            set subnet {{ipsec['remote'][loop.index -1]}}
+            next
+            edit "net_{{ipsec['local'][loop.index -1]}}"
+            set comment "P1_{{vpn}}"
+            set subnet {{ipsec['local'][loop.index -1]}}
+            next
+    {% endfor -%}
+end
+
+{# Make Policy, carefull with interfaces -#}
+config firewall policy
+    {% for vpn, ipsec in config|dictsort %}
+        
+    edit 0
+        set name "{{ipsec['remote'][loop.index -1]}}-{{ ipsec['local'][loop.index -1] }}"
+        set srcintf "P1_{{vpn}}"
+        set dstintf "{{ ipsec['internal'] }}"
+        set srcaddr "net_{{ ipsec['remote'][loop.index -1] }}"
+        set dstaddr "net_{{ ipsec['local'][loop.index -1] }}"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set logtraffic-start enable
+        set comments "{{vpn}}"
+    next
+    edit 0
+        set name "{{ ipsec['local'][loop.index -1] }}-{{ ipsec['remote'][loop.index -1] }}"
+        set srcintf "{{ ipsec['internal'] }}"
+        set dstintf "P1_{{vpn}}"
+        set srcaddr "net_{{ ipsec['local'][loop.index -1] }}"
+        set dstaddr "net_{{ ipsec['remote'][loop.index -1] }}"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set logtraffic-start enable
+        set comments "{{vpn}}"
+    next
+        
+{% endfor %}
+end
